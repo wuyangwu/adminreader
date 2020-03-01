@@ -1,0 +1,17 @@
+@import "./reset";
+
+
+$fontSize: 37.5;
+@function px2em($px){
+  @return ($px / $fontSize) + rem;
+}
+
+@mixin center(){
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+@mixin UandDCenter(){
+  display: flex;
+  align-items: center;
+}
