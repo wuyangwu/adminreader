@@ -2,7 +2,7 @@
   <div id="app">
     <vue-particles color="#409EFF"
                    :particleOpacity="0.9"
-                   :particlesNumber="20"
+                   :particlesNumber="15"
                    shapeType="circle"
                    :particleSize="4"
                    linesColor="#409EFF"

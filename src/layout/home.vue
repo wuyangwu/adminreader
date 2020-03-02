@@ -6,7 +6,7 @@
           <el-image style="width: 100%;height: 100%" src="../../assets/image/324269.jpg"></el-image>
 <!--                    <img src="../assets/logo.png">-->
         </div>
-
+<!--   左侧导航栏 -->
         <el-menu :default-active="this.$route.path" CLASS="el-menu-vertical-demo" router  :collapse="isCollapse">
           <NavMenu :nav-menus="navList" :fontsizelist="fontsizelist" :is-collapse="isCollapse"></NavMenu>
         </el-menu>
@@ -19,8 +19,9 @@
               <div class="head-leftprev"><el-button class="head-button" icon="el-icon-message-solid">3</el-button></div>
               <!--              <div class="head-leftprev"><el-button >4</el-button></div>-->
             </div>
-            <div class="head-center" style="">
-              <router-link to="/test">jump</router-link>
+            <div class="head-center" style="font-size: 25px">
+              <span>今天你阅读了吗？</span>
+<!--              <router-link to="/test">jump</router-link>-->
             </div>
             <div class="head-right" style="">右边</div>
           </div>
@@ -155,6 +156,7 @@
             height: 100%;
 
             .headerleft {
+              position: relative;
               flex: 0 0 px2em(230);
               height: 100%;
               display: flex;
