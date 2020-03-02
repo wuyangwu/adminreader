@@ -6,7 +6,7 @@
       <el-button type="primary" icon="el-icon-plus"  size="small" @click="addbook()" style="margin-left: 10px" plain>添加书籍</el-button>
       <div style="justify-content: flex-end;flex: 1;display: flex;">
         <el-tooltip class="item" style="margin-right: 50px" effect="dark" content="刷新" placement="top-start">
-          <el-button  icon="el-icon-refresh-left" @click="jiazai()" circle></el-button>
+          <el-button  icon="el-icon-refresh-left" @click="jiazaiPage()" circle></el-button>
         </el-tooltip>
       </div>
     </div>
@@ -60,6 +60,17 @@
               </template>
             </el-table-column>
       </el-table>
+<!--      分页显示地方  -->
+      <div class="block">
+        <el-pagination
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          :page-size="5"
+          :hide-on-single-page="false"
+          layout="total, prev, pager, next"
+          :total="total">
+        </el-pagination>
+      </div>
     </div>
 <!--    添加书籍页面-->
     <el-drawer :title="biaojitext" :visible.sync="drawer" :direction="direction" :before-close="handleClose">
@@ -154,6 +165,7 @@
     },
     data() {
       return {
+        total: 11, // 多少条数据
         tableData: [
         ],
         showViewer: false,
@@ -217,10 +229,30 @@
       }
     },
     mounted() { // 页面初始化
-      this.jiazai()
+      // this.jiazai()
       this.loaderFenlei()
+      this.jiazaiPage()
     },
     methods: {
+      handleSizeChange(val) {
+        console.log(`每页 ${val} 条`)
+      },
+      handleCurrentChange(val) {
+        console.log(val)
+        const data = { pageNum: val }
+        const url = '/api/houtai/book/selects'
+        postJson(url, qs.parse(data)).then(res => {
+          this.total = res.total
+          this.tableData = res.list
+          console.log(res)
+          for (var i = 0; i < this.tableData.length; i++) {
+            this.tableData[i].introductions = this.tableData[i].introduction
+            this.tableData[i].introduction = this.tableData[i].introduction.slice(0, 50) + '...'
+            this.tableData[i].createTime = new Date(this.tableData[i].createTime)
+            this.tableData[i].createTime = this.tableData[i].createTime.toLocaleDateString().replace(/\//g, '-') + ' ' + this.tableData[i].createTime.toTimeString().substr(0, 8)
+          }
+        })
+      },
       loaderFenlei() {
         getornonumber('/api/biaoqian/select').then(res => {
           let a = []
@@ -287,7 +319,7 @@
         }).then(() => {
           getornonumber(url).then(res => {
             this.loads('删除中请稍等')
-            this.jiazai()
+            this.jiazaiPage()
             this.$message({
               showClose: true,
               message: '删除成功！！',
@@ -299,6 +331,21 @@
             type: 'info',
             message: '已取消删除'
           })
+        })
+      },
+      jiazaiPage() {
+        // 初始化表格
+        const data = { pageNum: 1 }
+        const url = '/api/houtai/book/selects'
+        postJson(url, qs.parse(data)).then(res => {
+          this.total = res.total
+          this.tableData = res.list
+          for (var i = 0; i < this.tableData.length; i++) {
+            this.tableData[i].introductions = this.tableData[i].introduction
+            this.tableData[i].introduction = this.tableData[i].introduction.slice(0, 50) + '...'
+            this.tableData[i].createTime = new Date(this.tableData[i].createTime)
+            this.tableData[i].createTime = this.tableData[i].createTime.toLocaleDateString().replace(/\//g, '-') + ' ' + this.tableData[i].createTime.toTimeString().substr(0, 8)
+          }
         })
       },
       jiazai() {
@@ -398,7 +445,7 @@
             postJson(url, qs.parse(this.submit)).then(res => {
               // eslint-disable-next-line no-const-assign
               this.drawer = false
-              this.jiazai()
+              this.jiazaiPage()
                a = 1
             })
             // eslint-disable-next-line eqeqeq
@@ -538,6 +585,14 @@
       background-color: #F4F1F4;
       display: flex;
       @include UandDCenter;
+    }
+    .block{
+      width:100%;
+      display: flex;
+      justify-content: flex-end;
+      .blockShow{
+        @include center;
+      }
     }
     .show{
       width: 100%;

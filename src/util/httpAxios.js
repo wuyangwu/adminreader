@@ -1,5 +1,6 @@
 import axios from 'axios'
 import qs from 'qs'
+import router from '../router'
 const querystring = require('querystring')
 //
 // // 拦截器
@@ -14,6 +15,7 @@ axios.defaults.withCredentials = true // 携带cookie
 // http request 封装请求头拦截器
 axios.interceptors.request.use(config => {
   // 发送之前做什么
+  // console.log(config)
   // eslint-disable-next-line eqeqeq
   if (config.url == '/api/login') {
     // 传送不是json格式
@@ -40,15 +42,21 @@ axios.interceptors.request.use(config => {
   // console.log(config)
   return config
 }, error => {
+  // console.log(error)
   return Promise.reject(error)
 })
 // http response 封装后台返回拦截器
 axios.interceptors.response.use(response => {
   // 相应数据
-  // console.log(response)
+  if (response.data.msg != null) {
+    console.log('123')
+    // router.push({ path: '/fail' }, onComplete => { }, onAbort => { })
+    router.push({ path: '/fail' })
+  }
   return response
 }, error => {
   // if(error.)
+  // console.log(error)
   return Promise.reject(error)
 })
 
