@@ -3,7 +3,7 @@
     <div class="top">
       <el-input v-model="search" style="width: 160px;margin-left: 10px" placeholder="请输入书名"></el-input>
       <el-button icon="el-icon-search" style="margin-left: 4px" circle @click="searchs()" ></el-button>
-      <el-button type="primary" icon="el-icon-plus"  size="small" @click="drawer = true" style="margin-left: 10px" plain>添加书籍</el-button>
+      <el-button type="primary" icon="el-icon-plus"  size="small" @click="addbook()" style="margin-left: 10px" plain>添加书籍</el-button>
       <div style="justify-content: flex-end;flex: 1;display: flex;">
         <el-tooltip class="item" style="margin-right: 50px" effect="dark" content="刷新" placement="top-start">
           <el-button  icon="el-icon-refresh-left" @click="jiazai()" circle></el-button>
@@ -31,7 +31,7 @@
         </el-table-column>
         <el-table-column label="书籍名称"  prop="name"  width="120">
         </el-table-column>
-        <el-table-column prop="type" label="书籍类型" width="100" :filters="[{ text: '心理科学', value: '心理科学' }, { text: '历史人物', value: '历史人物' }]" :filter-method="filterTag" filter-placement="bottom-end">
+        <el-table-column prop="type" label="书籍类型" width="100" :filters="filterList" :filter-method="filterTag" filter-placement="bottom-end">
           <template slot-scope="scope">
             <el-tag type="primary" disable-transitions>{{scope.row.type}}</el-tag>
           </template>
@@ -56,24 +56,24 @@
                 <el-button
                   size="mini"
                   type="danger"
-                  @click="handleDelete(scope.$index, scope.row)">Delete</el-button>
+                  @click="handleDelete(scope.$index, scope.row.id)">Delete</el-button>
               </template>
             </el-table-column>
       </el-table>
     </div>
 <!--    添加书籍页面-->
-    <el-drawer title="添加书籍" :visible.sync="drawer" :direction="direction" :before-close="handleClose">
+    <el-drawer :title="biaojitext" :visible.sync="drawer" :direction="direction" :before-close="handleClose">
       <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
         <el-form-item label="书籍名称" prop="name">
           <el-input v-model="ruleForm.name"></el-input>
         </el-form-item>
         <el-form-item label="书籍分类" prop="region">
-          <el-select v-model="ruleForm.region" placeholder="请选择活动区域">
-            <el-option label="区域一" value="shanghai"></el-option>
-            <el-option label="区域二" value="beijing"></el-option>
+          <el-select v-model="ruleForm.biaoqianId" placeholder="请选分类">
+            <el-option v-for="item in biaoList" :key="item.value" :label="item.label" :value="item.value">
+            </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="创建时间" required>
+        <el-form-item v-if="biaoji === 0" label="创建时间" required>
           <el-col :span="11">
             <el-form-item prop="date1">
               <el-date-picker type="date" placeholder="选择日期" v-model="ruleForm.date1" style="width: 100%;"></el-date-picker>
@@ -87,11 +87,12 @@
           </el-col>
         </el-form-item>
         <el-form-item label="书籍作者" >
-          <el-input v-model="ruleForm.name"></el-input>
+          <el-input v-model="ruleForm.author"></el-input>
         </el-form-item>
-        <el-form-item label="书籍图片" prop="delivery">
-          <el-upload :action="urlImage"  with-credentials name="file" :file-list="fileListImage" list-type="picture-card" :auto-upload="true" :on-success="handleSuccess" >
+        <el-form-item label="书籍图片">
+          <el-upload :action="urlImage"  with-credentials name="file" :limit="Filenumber" :before-upload="beforeUploadImage" :file-list="fileListImage" list-type="picture-card" :auto-upload="true" :on-success="handleSuccess" >
             <i slot="default" class="el-icon-plus"></i>
+            <div slot="tip" class="el-upload__tip">只能上传ipg,png格式书籍文件</div>
             <div slot="file" slot-scope="{file}" style="width: 100%;height: 100%;">
               <el-image
                 style="width: 100%; height: 100%"
@@ -116,15 +117,19 @@
 <!--        <el-form-item label="书籍图片" prop="delivery">-->
 <!--          <el-switch v-model="ruleForm.delivery"></el-switch>-->
 <!--        </el-form-item>-->
-        <el-form-item label="上传书籍" prop="delivery">
-          <el-switch v-model="ruleForm.delivery"></el-switch>
+        <el-form-item label="上传书籍" >
+          <el-upload class="upload-demo" :action="urlFile" name="file" :before-upload="beforeUploadFile" :limit="Filenumber" :on-success="handleChange" :auto-upload="true" :file-list="fileList">
+            <el-button size="small" type="primary">点击上传</el-button>
+            <div slot="tip" class="el-upload__tip">只能上传epub格式书籍文件</div>
+          </el-upload>
         </el-form-item>
         <el-form-item label="书籍介绍" prop="desc">
-          <el-input type="textarea" v-model="ruleForm.desc"></el-input>
+          <el-input type="textarea" v-model="ruleForm.introduction"></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="submitForm('ruleForm')">立即创建</el-button>
-          <el-button @click="resetForm('ruleForm')">重置</el-button>
+          <el-button v-if="biaoji === 0" type="primary" @click="submitForm()">立即创建</el-button>
+          <el-button v-if="biaoji === 1" type="primary" @click="submitForm()">立即修改</el-button>
+          <el-button @click="resetForm()">重置</el-button>
         </el-form-item>
       </el-form>
     </el-drawer>
@@ -140,8 +145,8 @@
 </template>
 
 <script>
-  import { getornonumber } from '../../../util/httpAxios'
-  // import qs from 'qs'
+  import { getornonumber, postJson } from '../../../util/httpAxios'
+  import qs from 'qs'
   import ElImageViewer from 'element-ui/packages/image/src/image-viewer'
   export default {
     components: {
@@ -157,22 +162,33 @@
         drawer: false, // 控制表单显示的
         direction: 'rtl',
         ruleForm: {
+          id: 0,
+          name: null,
+          author: null,
+          pricate: null,
+          bookUrl: null,
+          biaoqianId: null,
+          upauthorId: -1,
+          introduction: null
+        },
+        filterList: [{ text: '心理科学', value: '心理科学' }, { text: '历史人物', value: '历史人物' }],
+        submit: {
+          id: 0,
           name: '',
-          region: '',
-          date1: '',
-          date2: '',
-          delivery: false,
-          type: [],
-          resource: '',
-          desc: ''
+          author: '',
+          pricate: '',
+          bookUrl: '',
+          biaoqianId: '',
+          upauthorId: '',
+          introduction: ''
         },
         rules: {
           name: [
-            { required: true, message: '请输入活动名称', trigger: 'blur' },
-            { min: 3, max: 5, message: '长度在 3 到 5 个字符', trigger: 'blur' }
+            { required: true, message: '请输入书籍名称', trigger: 'blur' },
+            { min: 1, max: 10, message: '长度在 1 到 10个字符', trigger: 'blur' }
           ],
-          region: [
-            { required: true, message: '请选择活动区域', trigger: 'change' }
+          biaoqianId: [
+            { required: true, message: '请选择分类', trigger: 'change' }
           ],
           date1: [
             { type: 'date', required: true, message: '请选择日期', trigger: 'change' }
@@ -180,27 +196,54 @@
           date2: [
             { type: 'date', required: true, message: '请选择时间', trigger: 'change' }
           ],
-          type: [
-            { type: 'array', required: true, message: '请至少选择一个活动性质', trigger: 'change' }
+          author: [
+            { required: true, message: '请输入书名作者', trigger: 'change' }
           ],
-          resource: [
-            { required: true, message: '请选择活动资源', trigger: 'change' }
-          ],
-          desc: [
-            { required: true, message: '请填写活动形式', trigger: 'blur' }
+          introduction: [
+            { required: true, message: '请输入书籍介绍', trigger: 'change' }
           ]
         },
+        fileList: [],
         dialogImageUrl: '', // 表格上的图片显示
         dialogVisible: false, // 表单上的图片显示
         disabled: false,
         urlImage: '/api/file/updateimgae', //  图片上传url
-        fileListImage: [] // 显示图片url
+        urlFile: '/api/file/updatefile', // 文件上传url
+        fileListImage: [], // 显示图片url
+        Filenumber: 1,
+        biaoList: [], // 标签列表
+        biaoji: 0, // 0代表添加 1代表修改
+        biaojitext: '添加书籍'
       }
     },
-    mounted() {
+    mounted() { // 页面初始化
       this.jiazai()
+      this.loaderFenlei()
     },
     methods: {
+      loaderFenlei() {
+        getornonumber('/api/biaoqian/select').then(res => {
+          let a = []
+          a = res
+          // eslint-disable-next-line eqeqeq
+          if (a.length == 0) {
+            this.$message({
+              message: '请到标签页面添加标签',
+              type: 'warning'
+            })
+          } else {
+            this.biaoList = []
+            this.filterList = []
+            console.log(a)
+            // value: '选项5',
+            //   label: '北京烤鸭'
+            for (var i = 0; i < a.length; i++) {
+              this.biaoList.push({ label: a[i].name, value: a[i].id })
+              this.filterList.push({ text: a[i].name, value: a[i].name })
+            }
+          }
+        })
+      },
       // resetDateFilter() {
       //   this.$refs.filterTable.clearFilter('date')
       // },
@@ -215,12 +258,48 @@
         return row[property] === value
       },
       handleEdit(index, row) {
-        // 编辑表格
-        console.log(index, row)
+        this.biaojitext = '修改书籍'
+        // 修改书籍
+        this.biaoji = 1
+        this.drawer = true
+        // 装载数据到表单
+        this.ruleForm.id = row.id
+        this.ruleForm.name = row.name
+        this.ruleForm.author = row.author
+        this.ruleForm.pricate = row.pricate
+        this.ruleForm.introduction = row.introductions
+        this.ruleForm.biaoqianId = row.biaoqianId
+        this.fileList = []
+        this.fileList.push({ name: row.name + '.epub', url: row.bookUrl })
+        this.fileListImage = []
+        this.fileListImage.push({ url: row.pricate })
+        // console.log(this.fileList)
+        // console.log(this.fileListImage)
       },
       handleDelete(index, row) {
         // 删除表格书籍
-        console.log(index, row)
+        // eslint-disable-next-line no-unused-vars
+        const url = `/api/houtai/book/delete/${row}`
+        this.$confirm('此操作将永久删除书籍, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          getornonumber(url).then(res => {
+            this.loads('删除中请稍等')
+            this.jiazai()
+            this.$message({
+              showClose: true,
+              message: '删除成功！！',
+              type: 'success'
+            })
+          })
+        }).catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消删除'
+          })
+        })
       },
       jiazai() {
         // 初始化表格
@@ -228,9 +307,23 @@
           this.tableData = res
           // eslint-disable-next-line no-undef
           for (var i = 0; i < this.tableData.length; i++) {
+            this.tableData[i].introductions = this.tableData[i].introduction
             this.tableData[i].introduction = this.tableData[i].introduction.slice(0, 50) + '...'
+            this.tableData[i].createTime = new Date(this.tableData[i].createTime)
+            this.tableData[i].createTime = this.tableData[i].createTime.toLocaleDateString().replace(/\//g, '-') + ' ' + this.tableData[i].createTime.toTimeString().substr(0, 8)
           }
         })
+      },
+      loads(res) {
+        const loading = this.$loading({
+          lock: true,
+          text: res,
+          spinner: 'el-icon-loading',
+          background: 'rgba(0, 0, 0, 0.7)'
+        })
+        setTimeout(() => {
+          loading.close()
+        }, 2000)
       },
       tupian(image) {
         // 加载表格上面的图片
@@ -256,7 +349,10 @@
           getornonumber(url).then(res => {
             this.tableData = res
             for (var i = 0; i < this.tableData.length; i++) {
+              this.tableData[i].introductions = this.tableData[i].introduction
               this.tableData[i].introduction = this.tableData[i].introduction.slice(0, 50) + '...'
+              this.tableData[i].createTime = new Date(this.tableData[i].createTime)
+              this.tableData[i].createTime = this.tableData[i].createTime.toLocaleDateString().replace(/\//g, '-') + ' ' + this.tableData[i].createTime.toTimeString().substr(0, 8)
             }
           })
         } else {
@@ -268,14 +364,68 @@
       },
       submitForm(formName) {
         // 提交表单
-        this.$refs[formName].validate((valid) => {
-          if (valid) {
-            alert('submit!')
+        // eslint-disable-next-line no-unused-vars
+        let a = 0
+        let url = ''
+        if (this.biaoji === 0) { // 0代表添加 1代表修改
+          url = '/api/houtai/book/add'
+        } else {
+          url = '/api//houtai/book/updateOrId' // 修改
+        }
+        if (this.ruleForm.name == null || this.ruleForm.author == null || this.ruleForm.biaoqianId == null || this.ruleForm.introduction == null) {
+          this.$message({
+            type: 'warning',
+            message: '表格所有数据不能为空'
+          })
+        } else {
+          // eslint-disable-next-line eqeqeq
+          if (this.fileListImage.length == 0 || this.fileList.length == 0) {
+            // console.log(123)
+            this.$message({
+              type: 'warning',
+              message: '图片或者文件没有上传'
+            })
           } else {
-            console.log('error submit!!')
-            return false
+            var info = JSON.parse(localStorage.getItem('info'))
+            this.submit.id = this.ruleForm.id
+            this.submit.name = this.ruleForm.name
+            this.submit.author = this.ruleForm.author
+            this.submit.pricate = this.fileListImage[0].url
+            this.submit.bookUrl = this.fileList[0].url
+            this.submit.biaoqianId = this.ruleForm.biaoqianId
+            this.submit.upauthorId = info.id
+            this.submit.introduction = this.ruleForm.introduction
+            postJson(url, qs.parse(this.submit)).then(res => {
+              // eslint-disable-next-line no-const-assign
+              this.drawer = false
+              this.jiazai()
+               a = 1
+            })
+            // eslint-disable-next-line eqeqeq
+            if (a == 0 && this.biaoji == 0) {
+              this.$message({
+                type: 'success',
+                message: '添加成功'
+              })
+            } else {
+              // eslint-disable-next-line eqeqeq
+              if (a == 0 && this.biaoji == 1) {
+                this.$message({
+                  type: 'success',
+                  message: '修改成功'
+                })
+              } else {
+                this.$message({
+                  type: 'warning',
+                  message: '添加失败重新尝试'
+                })
+              }
+            }
           }
-        })
+        }
+      },
+      resetForm() {
+        console.log('重置')
       },
       handleRemove(file) {
         this.fileListImage = []
@@ -292,8 +442,81 @@
       handleSuccess(response, file, fileList) {
         // 图片上传后的回调函数
         // eslint-disable-next-line no-undef
-        this.fileListImage = []
+        // this.fileListImage = []
         this.fileListImage.push({ url: response })
+        this.$message({
+          message: '图片上传成功',
+          type: 'success'
+        })
+      },
+      handleChange(file, fileList) {
+        this.fileList = []
+        this.fileList.push(file)
+        this.$message({
+          message: '文件上传成功',
+          type: 'success'
+        })
+      },
+      beforeUploadFile(file) {
+        // eslint-disable-next-line no-unused-vars
+        var testmsg = file.name.substring(file.name.lastIndexOf('.') + 1)
+        // eslint-disable-next-line eqeqeq,no-unused-vars
+        const extension = testmsg == 'epub'
+        if (!extension) {
+          this.$message({
+            message: '上传文件只能是epub格式!',
+            type: 'warning'
+          })
+        }
+        return extension
+      },
+      beforeUploadImage(file) {
+        // eslint-disable-next-line no-unused-vars
+        var testmsg = file.name.substring(file.name.lastIndexOf('.') + 1)
+        // eslint-disable-next-line no-unused-vars,eqeqeq
+        const extension = testmsg == 'jpg'
+        // eslint-disable-next-line no-unused-vars,eqeqeq
+        const extension2 = testmsg == 'png'
+        if (!extension && !extension2) {
+          this.$message({
+            message: '上传文件只能是 jpg、png格式!',
+            type: 'warning'
+          })
+        }
+        return extension || extension2
+      },
+      addbook(biaoji) {
+        this.biaoji = 0
+        this.drawer = true
+        this.biaojitext = '添加书籍'
+        this.ruleForm.id = 0
+        this.ruleForm.name = null
+        this.ruleForm.author = null
+        this.ruleForm.pricate = null
+        this.ruleForm.introduction = null
+        this.ruleForm.biaoqianId = null
+        this.fileList = []
+        this.fileListImage = []
+        // getornonumber('/api/biaoqian/select').then(res => {
+        //   let a = []
+        //   a = res
+        //   // eslint-disable-next-line eqeqeq
+        //   if (a.length == 0) {
+        //     this.$message({
+        //       message: '请到标签页面添加标签',
+        //       type: 'warning'
+        //     })
+        //   } else {
+        //     this.biaoList = []
+        //
+        //     console.log(a)
+        //     // value: '选项5',
+        //     //   label: '北京烤鸭'
+        //    for (var i = 0; i < a.length; i++) {
+        //      this.biaoList.push({ label: a[i].name, value: a[i].id })
+        //    }
+        //   }
+        // })
       }
     }
   }

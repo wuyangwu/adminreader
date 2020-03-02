@@ -7,7 +7,7 @@ router.beforeEach(async (to, from, next) => {
   var info = JSON.parse(localStorage.getItem('info'))
   // eslint-disable-next-line eqeqeq
   if (info != null && info.username != null && info.id != null && to.path == '/a') {
-    console.log('加入路由')
+    // console.log('加入路由')
     router.addRoutes(asyncRouter)
     next({ ...to, replace: true })
   } else {
