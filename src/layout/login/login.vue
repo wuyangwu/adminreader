@@ -5,7 +5,7 @@
       </div>
       <div class="login">
         <div class="login-text">
-          <span>后台登录系统</span>
+          <span>阅读后台登录系统</span>
         </div>
         <div class="login-user">
           <div class="login-username">
@@ -31,7 +31,6 @@
 <script>
   // import { post } from '../../util/httpAxios'
   import { post } from '../../util/httpAxios'
-
   export default {
     name: 'login',
     data() {
@@ -98,11 +97,11 @@
 </script>
 
 <style lang="scss" scoped>
-  @import "../../assets/style/globak.scss";
+  @import "../../assets/style/gol";
   .login{
     width: 100%;
     height: 100%;
-    position: relative;
+    /*position: relative;*/
     /*background: linear-gradient(to right,#0CF,dodgerblue);*/
     .login-one{
       display: flex;
@@ -136,15 +135,6 @@
           flex: 0 0 px2em(600);
           border: 1px solid red;
           @include center;
-          /*.login-username{*/
-          /*  top: px2em(80);*/
-          /*  left: px2em(130);*/
-          /*  position: absolute;*/
-          /*  border: 1px solid red;*/
-          /*  display: flex;*/
-          /*  flex-direction: column;*/
-          /*  //@include center;*/
-          /*}*/
         }
         flex: 1;
       }
