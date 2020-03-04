@@ -2,9 +2,10 @@
   <div class="home">
     <el-container>
       <el-aside :width="change" style="border-right: 1.5px solid #ccc">
-        <div style="width: 100%;height: 15%;">
-          <el-image style="width: 100%;height: 100%" src="../../assets/image/324269.jpg"></el-image>
-<!--                    <img src="../assets/logo.png">-->
+        <div class="im" style="width: 100%;height: 15%;">
+          <el-avatar :size="sizes" :src="pricate"></el-avatar>
+<!--          <el-image style="width: 100%;height: 100%" :src="pricate"></el-image>-->
+<!--            <img  style="width: 100%;height: 100%" :src="pricate">-->
         </div>
 <!--   左侧导航栏 -->
         <el-menu :default-active="this.$route.path" CLASS="el-menu-vertical-demo" router  :collapse="isCollapse">
@@ -12,18 +13,33 @@
         </el-menu>
       </el-aside>
       <el-container>
-        <el-header height="7%">
+        <el-header height="7%" style="padding: 0">
           <div class="homeheader" style="box-shadow:rgba(0, 0, 0, 0.32) 0px 3px 8px; ">
             <div class="headerleft">
               <div class="head-leftprev"> <el-button class="head-button"  :icon="nvicon" @click="click()"></el-button></div>
-              <div class="head-leftprev"><el-button class="head-button" icon="el-icon-message-solid">3</el-button></div>
+              <div class="head-leftprev">
+                <lottie :options="defaultOptions"  :width="70" :height="180" v-on:animCreated="handleAnimation" />
+<!--                <el-button class="head-button" icon="el-icon-message-solid">3</el-button>-->
+              </div>
               <!--              <div class="head-leftprev"><el-button >4</el-button></div>-->
             </div>
             <div class="head-center" style="font-size: 25px">
               <span>今天你阅读了吗？</span>
 <!--              <router-link to="/test">jump</router-link>-->
             </div>
-            <div class="head-right" style="">右边</div>
+            <div class="head-right" style="">
+              <div style="margin-right: 100px">
+                <el-dropdown>
+                  <span class="el-dropdown-link">
+                    {{name}}
+                    <i class="el-icon-arrow-down el-icon--right"></i>
+                  </span>
+                  <el-dropdown-menu slot="dropdown">
+                    <el-dropdown-item @click.native="zhuxiao()">注销</el-dropdown-item>
+                  </el-dropdown-menu>
+                </el-dropdown>
+              </div>
+            </div>
           </div>
         </el-header>
         <el-main>
@@ -41,27 +57,52 @@
           </div>
         </el-main>
         <el-footer>
-          底部公司名字
+          ©️2020 今天您阅读了吗？
         </el-footer>
       </el-container>
     </el-container>
+    <el-dialog
+      title="提示"
+      :visible.sync="dialogVisible"
+      width="30%"
+      :before-close="handleClose">
+      <span>注销成功返回登录页面</span>
+      <span slot="footer" class="dialog-footer">
+<!--    <el-button @click="dialogVisible = false">取 消</el-button>-->
+    <el-button type="primary" @click="jump()">确 定</el-button>
+  </span>
+    </el-dialog>
   </div>
 </template>
 
 <script>
   import NavMenu from './NavMenu'
+  import Lottie from 'vue-lottie'
+  import animationData from '../assets/pinjump'
+  import { getornonumber } from '../util/httpAxios'
   export default {
     name: 'home',
     components: {
       // eslint-disable-next-line vue/no-unused-components
-      NavMenu
+      NavMenu,
+      lottie: Lottie
+    },
+    mounted () {
+      this.changeName()
     },
     data: function () {
       return {
+        sizes: 100,
         a: true,
+        defaultOptions: { animationData: animationData, loop: true, autoplay: true },
+        defaultAnim: '',
+        animationSpeed: 1,
         isCollapse: false,
         change: '210px',
         nvicon: 'el-icon-s-fold',
+        name: '',
+        pricate: 'http://127.0.0.1:8088/img/bookimage/92d27f33-b6d3-4345-a779-658b47f786de.jpg',
+        dialogVisible: false, // 注销
         navList: [
           {
             path: '/a/home/zhuye',
@@ -89,7 +130,13 @@
           },
           {
             path: '/a/username',
-            name: '用户管理'
+            name: '用户管理',
+            children: [
+              {
+                path: '/a/home/usershow',
+                name: '管理'
+              }
+            ]
           }
 
         ],
@@ -109,6 +156,25 @@
       $route: 'getPath' // 监听事件后调用
     },
     methods: {
+      jump() {
+        this.dialogVisible = false
+        localStorage.clear()
+        this.$router.push('/login')
+      },
+      zhuxiao() {
+        this.dialogVisible = true
+        getornonumber('/api/logout').then(res => {
+          //
+        })
+      },
+      changeName() {
+        var info = JSON.parse(localStorage.getItem('info'))
+        this.name = info.username
+        this.pricate = info.pricate
+      },
+      handleAnimation(anim) {
+        this.defaultAnim = anim
+      },
       getPath (to, from) {
         this.breadList = []
         for (const bread of this.$route.matched) {
@@ -120,9 +186,11 @@
       click () {
         if (!this.isCollapse) {
           this.change = '100px'
+          this.sizes = 50
           this.nvicon = 'el-icon-s-unfold'
         } else {
           this.change = '250px'
+          this.sizes = 80
           this.nvicon = 'el-icon-s-fold'
         }
         this.isCollapse = !this.isCollapse
@@ -138,7 +206,7 @@
 </script>
 
 <style lang="scss" scoped>
-  @import "../assets/style/globak.scss";
+  @import "../assets/style/gol";
   .home {
     width: 100%;
     height: 100%;
@@ -147,6 +215,9 @@
       height: 100%;
       display: flex;
       .el-aside {
+        .im{
+          @include center;
+        }
         /*background-color: #D3DCE6;*/
       }
       .el-container {
@@ -176,7 +247,15 @@
             }
             .head-right {
               flex: 0 0 px2em(1000);
-              @include  center;
+              @include  UandDCenter;
+              justify-content: flex-end;
+              .el-dropdown-link {
+                cursor: pointer;
+                color: #409EFF;
+              }
+              .el-icon-arrow-down {
+                font-size: 12px;
+              }
             }
           }
         }

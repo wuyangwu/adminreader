@@ -238,7 +238,6 @@
         console.log(`每页 ${val} 条`)
       },
       handleCurrentChange(val) {
-        console.log(val)
         const data = { pageNum: val }
         const url = '/api/houtai/book/selects'
         postJson(url, qs.parse(data)).then(res => {

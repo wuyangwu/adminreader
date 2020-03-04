@@ -31,7 +31,7 @@
           </div>
         </div>
         <div class="login-button">
-          <el-button style="width: 330px;margin-left: 120px"  @click="login()">登录</el-button>
+          <el-button style="width: 330px;margin-left: 120px"  @click="submit()">登录</el-button>
         </div>
       </div>
     </div>
@@ -108,49 +108,47 @@
       // 提交登录信息
       submit() {
         if (this.formLogin.code.toLowerCase() !== this.identifyCode.toLowerCase()) {
-          this.$message.error('请填写正确验证码')
+          this.$message({
+            type: 'warning',
+            message: '验证码错误请重新填写'
+          })
           this.refreshCode()
           return
         }
-        this.$refs.loginForm.validate(valid => {
-          if (valid) {
-            // 登录
-            // 注意 这里的演示没有传验证码
-            // 具体需要传递的数据请自行修改代码
-            this.login({
-              vm: this,
-              username: this.formLogin.username,
-              password: this.formLogin.password
-            })
-          } else {
-            // 登录表单校验失败
-            this.$message.error('表单校验失败')
-          }
-        })
-      },
-      login: function () {
-        console.log(this.identifyCode.toLowerCase())
+
+        if (this.form.name === '' || this.form.passwd === '') {
+          this.$message({
+            type: 'warning',
+            message: '表单为空'
+          })
+          return
+        }
         post('/api/login', this.form).then(res => {
           // eslint-disable-next-line eqeqeq
           if (res.status == 200) {
             let a = 0
             this.authorities = res.msg.authorities
+            // console.log(this.authorities)
             for (var i = 0; i < this.authorities.length; i++) {
               // eslint-disable-next-line eqeqeq
-              if (this.authorities[i].authority == 'ROLE_admin') {
+              if (this.authorities[i].authority == 'ROLE_dba') {
+                console.log('guanliyuan')
                 a = 1
               }
             }
             // eslint-disable-next-line eqeqeq
             if (a == 0) {
+              localStorage.clear()
               this.$message({
                 type: 'warning',
                 message: '不是管理员账户不允许登录后台'
               })
             } else {
+              a = 0
               this.info.username = res.msg.userDetailed.username
               this.info.id = res.msg.id
-              console.log(this.info)
+              this.info.pricate = res.msg.userDetailed.pricate
+              // console.log(this.info)
               localStorage.setItem('info', JSON.stringify(this.info))
               this.$router.push('/a')
               this.$message({
@@ -158,7 +156,6 @@
                 message: '欢迎管理员登录'
               })
             }
-
             // 注销
           } else {
             this.$message({
@@ -167,11 +164,55 @@
             })
           }
         })
-        // this.$store.dispatch('setToken', 3).then(() => {
-        //   this.$router.push({ path: '/a' })
-        // })
-        // console.log(this.$store.getters.token)
       }
+      // login: function () {
+      //   // console.log(this.identifyCode.toLowerCase())
+      //   post('/api/login', this.form).then(res => {
+      //     // eslint-disable-next-line eqeqeq
+      //     if (res.status == 200) {
+      //       let a = 0
+      //       this.authorities = res.msg.authorities
+      //       // console.log(this.authorities)
+      //       for (var i = 0; i < this.authorities.length; i++) {
+      //         // eslint-disable-next-line eqeqeq
+      //         if (this.authorities[i].authority == 'ROLE_dba') {
+      //           console.log('guanliyuan')
+      //           a = 1
+      //         }
+      //       }
+      //       // eslint-disable-next-line eqeqeq
+      //       if (a == 0) {
+      //         localStorage.clear()
+      //         this.$message({
+      //           type: 'warning',
+      //           message: '不是管理员账户不允许登录后台'
+      //         })
+      //       } else {
+      //         a = 0
+      //         this.info.username = res.msg.userDetailed.username
+      //         this.info.id = res.msg.id
+      //         this.info.pricate = res.msg.userDetailed.pricate
+      //         // console.log(this.info)
+      //         localStorage.setItem('info', JSON.stringify(this.info))
+      //         this.$router.push('/a')
+      //         this.$message({
+      //           type: 'success',
+      //           message: '欢迎管理员登录'
+      //         })
+      //       }
+      //       // 注销
+      //     } else {
+      //       this.$message({
+      //         type: 'warning',
+      //         message: '用户名密码错误请重新尝试'
+      //       })
+      //     }
+      //   })
+      //   // this.$store.dispatch('setToken', 3).then(() => {
+      //   //   this.$router.push({ path: '/a' })
+      //   // })
+      //   // console.log(this.$store.getters.token)
+      // }
     }
   }
 </script>

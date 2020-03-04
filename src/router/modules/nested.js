@@ -10,7 +10,7 @@ const nestedRouter = [
       {
         path: 'zhuye',
         component: () => import('../../layout/nested/zhuye'),
-        name: 'zhuye',
+        name: '控制面板',
         meta: { title: 'zhuye' }
       },
       {
@@ -24,6 +24,12 @@ const nestedRouter = [
         component: () => import('../../layout/nested/book'),
         name: '书籍管理',
         meta: { title: '图书' }
+      },
+      {
+        path: 'usershow',
+        component: () => import('../../layout/nested/username'),
+        name: '用户管理',
+        meta: { title: '用户' }
       }
     ]
   }

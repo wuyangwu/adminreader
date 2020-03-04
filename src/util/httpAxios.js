@@ -48,8 +48,8 @@ axios.interceptors.request.use(config => {
 // http response 封装后台返回拦截器
 axios.interceptors.response.use(response => {
   // 相应数据
-  if (response.data.msg != null) {
-    console.log('123')
+  if (response.data.msgs != null) {
+    // console.log(response)
     // router.push({ path: '/fail' }, onComplete => { }, onAbort => { })
     router.push({ path: '/fail' })
   }

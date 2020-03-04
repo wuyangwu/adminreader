@@ -4,6 +4,7 @@ import login from '../layout/login/login'
 import nestedRouter from './modules/nested'
 import Home from '../layout/home'
 import fail from '../layout/fail/fail404'
+import lott from '../layout/util/lott'
 
 Vue.use(Router)
 
@@ -23,6 +24,11 @@ export const constantRoutes = [
     path: '/fail',
     name: '404页面',
     component: fail
+  },
+  {
+    path: '/tol',
+    name: '动画',
+    component: lott
   }
 ]
 

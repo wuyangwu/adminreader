@@ -6,6 +6,8 @@ import './plugins/element.js'
 import './assets/style/globak.scss'
 import './permission.js'
 import VueParticles from 'vue-particles'
+import echarts from 'echarts'
+Vue.prototype.$echarts = echarts
 Vue.use(VueParticles)
 Vue.config.productionTip = false
 
